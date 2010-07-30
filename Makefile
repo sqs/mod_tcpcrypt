@@ -1,5 +1,5 @@
 APXS=apxs2
-APACHECTL=apache2ctl
+APACHECTL=sudo /etc/init.d/apache2
 #DEFS=-Dmy_define=my_value
 #INCLUDES=-Imy/include/dir
 #LIBS=-Lmy/lib/dir -lmylib
@@ -17,7 +17,7 @@ configtest:
 	-sudo a2ensite test-tcpcrypt-site
 
 test: configtest reload
-	lynx -mime_header http://localhost:7777/tcpcrypt
+	curl http://localhost:7777/tcpcrypt.sh
 
 #   install and activate shared object by reloading Apache to
 #   force a reload of the shared object file
@@ -26,9 +26,9 @@ reload: install restart
 #   the general Apache start/restart/stop
 #   procedures
 start:
-	sudo $(APACHECTL) start
+	$(APACHECTL) start
 restart:
-	sudo $(APACHECTL) restart
+	$(APACHECTL) restart
 stop:
-	sudo $(APACHECTL) stop
+	$(APACHECTL) stop
 

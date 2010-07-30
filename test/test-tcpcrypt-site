@@ -1,0 +1,15 @@
+Listen 7777
+
+<VirtualHost *:7777>
+             DocumentRoot /home/sqs/src/mod_tcpcrypt/test
+             <Directory /home/sqs/src/mod_tcpcrypt/test/>
+                        Options +ExecCGI
+             </Directory>
+             
+             LogLevel debug
+             
+             LoadModule tcpcrypt_module modules/mod_tcpcrypt.so
+             <Location /tcpcrypt>
+                       SetHandler tcpcrypt
+             </Location>
+</VirtualHost>

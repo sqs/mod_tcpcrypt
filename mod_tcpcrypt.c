@@ -21,7 +21,7 @@ static int set_tcpcrypt_env(request_rec *r)
 
 static void tcpcrypt_register_hooks(apr_pool_t *p)
 {
-    ap_hook_fixups(set_tcpcrypt_env, NULL, NULL, APR_HOOK_MIDDLE);
+    ap_hook_fixups(set_tcpcrypt_env, NULL, NULL, APR_HOOK_FIRST);
 }
 
 module AP_MODULE_DECLARE_DATA tcpcrypt_module = {

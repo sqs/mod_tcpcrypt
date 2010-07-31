@@ -6,13 +6,14 @@
 
 static int set_tcpcrypt_env(request_rec *r)
 {
-    char *tcp_crypt, *tcp_crypt_sessid;
+    char *tcp_crypt = NULL, *tcp_crypt_sessid = NULL;
 
     apr_table_setn(r->subprocess_env, "TCP_CRYPT", "1");
     apr_table_set(r->subprocess_env, "TCP_CRYPT_SESSID", "abcd");
     
     ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, 
-                  "set_tcpcrypt_env: TCP_CRYPT=%s, TCP_CRYPT_SESSID=%s",
+                  "mod_tcpcrypt: set_tcpcrypt_env " \
+                  "TCP_CRYPT=%s, TCP_CRYPT_SESSID=%s",
                   tcp_crypt, tcp_crypt_sessid);
     
     return OK;

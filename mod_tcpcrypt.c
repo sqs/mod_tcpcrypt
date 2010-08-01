@@ -1,4 +1,5 @@
 #define CORE_PRIVATE
+#include <assert.h>
 #include "httpd.h"
 #include "http_config.h"
 #include "http_protocol.h"
@@ -32,45 +33,61 @@ module AP_MODULE_DECLARE_DATA tcpcrypt_module = {
 };
 
 static int get_tcpcrypt_sockopts(conn_rec *c, void *csd) {
-    unsigned char tcp_crypt_sessid[1024], tcp_crypt[1024];
+    unsigned char buf[1024];
+    unsigned char *b = (unsigned char *)buf;
+    char *tc_enable, *tc_sessid, *s;
     unsigned int len;
     struct fake_apr_socket_t *sock;
 
     sock = (struct fake_apr_socket_t *)csd;
     
-    len = sizeof(tcp_crypt);
+    len = sizeof(buf);
     if (tcpcrypt_getsockopt(sock->socketdes, IPPROTO_TCP, TCP_CRYPT_ENABLE,
-                   tcp_crypt, &len) == -1) {
+                   buf, &len) == -1) {
         ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c,
                       "getsockopt error for TCP_CRYPT_ENABLE: %s (%d)",
                       strerror(errno), errno);
         return DECLINED;
     }
 
-    len = sizeof(tcp_crypt_sessid);
+    tc_enable = (buf[0] ? "1" : "0");
 
+    len = sizeof(buf);
     if (tcpcrypt_getsockopt(sock->socketdes, IPPROTO_TCP, TCP_CRYPT_SESSID,
-                   tcp_crypt_sessid, &len) == -1) {
+                   buf, &len) == -1) {
         ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c,
                       "tcpcrypt_getsockopt error for TCP_CRYPT_SESSID: %s (%d)",
                       strerror(errno), errno);
         return DECLINED;
     }
 
+    tc_sessid = apr_palloc(c->pool, len*2 + 1);
+    assert(tc_sessid);
+    s = tc_sessid;
+    while (len--) {
+        sprintf(s, "%.2X", *b++);
+        s += 2;
+    }
+
     ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c, 
                   "mod_tcpcrypt: set_tcpcrypt_env " \
                   "socket={des=%d, type=%d, protocol=%d} " \
-                  "TCP_CRYPT=%s, TCP_CRYPT_SESSID=%s",
+                  "TCP_CRYPT_ENABLE=%s, TCP_CRYPT_SESSID=%s",
                   sock->socketdes, sock->type, sock->protocol,
-                  tcp_crypt, tcp_crypt_sessid);
+                  tc_enable, tc_sessid);
+    
+    /* TODO(sqs): addn doesnt copy, so the val must be around until the request occurs -- this should be ok, but check on it */
+    apr_table_addn(c->notes, "TCP_CRYPT_ENABLE", tc_enable);
+    apr_table_addn(c->notes, "TCP_CRYPT_SESSID", tc_sessid);
 
     return DECLINED;
 }
 
 static int set_tcpcrypt_env(request_rec *r)
 {
-    apr_table_setn(r->subprocess_env, "TCP_CRYPT", "1");
-    apr_table_set(r->subprocess_env, "TCP_CRYPT_SESSID", "abcd");
+    apr_table_setn(r->subprocess_env, "TCP_CRYPT_ENABLE", "1");
+    apr_table_set(r->subprocess_env, "TCP_CRYPT_SESSID", 
+                  apr_table_get(r->connection->notes, "TCP_CRYPT_SESSID"));
     
     return OK;
 }

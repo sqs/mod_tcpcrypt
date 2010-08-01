@@ -85,7 +85,8 @@ static int get_tcpcrypt_sockopts(conn_rec *c, void *csd) {
 
 static int set_tcpcrypt_env(request_rec *r)
 {
-    apr_table_setn(r->subprocess_env, "TCP_CRYPT_ENABLE", "1");
+    apr_table_setn(r->subprocess_env, "TCP_CRYPT_ENABLE", 
+                   apr_table_get(r->connection->notes, "TCP_CRYPT_ENABLE"));
     apr_table_set(r->subprocess_env, "TCP_CRYPT_SESSID", 
                   apr_table_get(r->connection->notes, "TCP_CRYPT_SESSID"));
     

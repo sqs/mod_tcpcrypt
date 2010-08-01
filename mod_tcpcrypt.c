@@ -39,6 +39,7 @@ static int get_tcpcrypt_sockopts(conn_rec *c, void *csd) {
     unsigned int len;
     struct fake_apr_socket_t *sock;
 
+    /* TODO(sqs): find a cleaner way of getting this? */
     sock = (struct fake_apr_socket_t *)csd;
     
     len = sizeof(buf);

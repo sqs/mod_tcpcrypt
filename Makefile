@@ -1,11 +1,11 @@
 APXS=apxs2
 APACHECTL=sudo /etc/init.d/apache2
-#DEFS=-Dmy_define=my_value
-#INCLUDES=-Imy/include/dir
-#LIBS=-Lmy/lib/dir -lmylib
+CFLAGS=-Wc,-g -Wc,-Wall
+INCLUDES=-I/home/sqs/src/tcpcrypt/code/user -I/home/sqs/src/tcpcrypt/code/user/tcpcrypt
+LIBS=-L/home/sqs/src/tcpcrypt/code/user/lib -ltcpcrypt
 
 install:
-	$(APXS) -cia mod_tcpcrypt.c
+	$(APXS) $(CFLAGS) $(INCLUDES) $(LIBS) -cia mod_tcpcrypt.c
 
 #   cleanup
 clean:

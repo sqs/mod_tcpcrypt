@@ -15,7 +15,6 @@ clean:
 configtest:
 	-cp test/test-tcpcrypt-site /etc/apache2/sites-available/
 	-sudo a2ensite test-tcpcrypt-site
-	-sudo chmod 666 /tmp/tcpcrypt
 
 test: configtest reload req
 

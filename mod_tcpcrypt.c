@@ -48,7 +48,7 @@ static int get_tcpcrypt_sockopts(conn_rec *c, void *csd) {
                    buf, &len) == -1) {
         /* couldn't getsockopt, so unless it returned a weird error, then
            tcpcrypt is not enabled */
-        if (errno == ENOPROTOOPT) {
+        if (errno == ENOENT) {
             tc_enable = 0;
         } else {
             ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c,

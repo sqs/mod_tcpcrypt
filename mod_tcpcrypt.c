@@ -11,6 +11,7 @@
 #include "tcpcrypt/tcpcrypt.h"
 #include "tcpcrypt/tcpcrypt_ctl.h"
 
+/* TODO(sqs): find a cleaner way of getting access to socketdes */
 struct fake_apr_socket_t {
     apr_pool_t *pool;
     int socketdes;
@@ -40,12 +41,8 @@ static int get_tcpcrypt_sockopts(conn_rec *c, void *csd) {
     unsigned int len;
     struct fake_apr_socket_t *sock;
 
-    /* TODO(sqs): find a cleaner way of getting this? */
     sock = (struct fake_apr_socket_t *)csd;
     
-    /* TODO(sqs): ask andrea -- if getsockopt fails, can I assume that tcpcrypt
-       is not enabled? it could be another error, but even if it's another
-       error, it'd still mean we can't use tcpcrypt. */
     len = sizeof(buf);
     if (tcpcrypt_getsockopt(sock->socketdes, IPPROTO_TCP, TCP_CRYPT_ENABLE,
                    buf, &len) == -1) {

@@ -13,8 +13,4 @@ Listen 7777
              <IfModule !mod_tcpcrypt.c>
                        LoadModule tcpcrypt_module modules/mod_tcpcrypt.so
              </IfModule>
-
-             #<Location />
-             #          SetHandler tcpcrypt
-             #</Location>
 </VirtualHost>

@@ -17,7 +17,9 @@ configtest:
 	-sudo a2ensite test-tcpcrypt-site
 	-sudo chmod 666 /tmp/tcpcrypt
 
-test: configtest reload
+test: configtest reload req
+
+req:
 	curl http://localhost:7777/tcpcrypt.sh
 
 #   install and activate shared object by reloading Apache to

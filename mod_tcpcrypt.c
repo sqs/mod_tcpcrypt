@@ -90,7 +90,6 @@ static int get_tcpcrypt_sockopts(conn_rec *c, void *csd) {
                   sock->socketdes, sock->type, sock->protocol,
                   tc_enable, tc_enable ? tc_sessid : "<none>");
     
-    /* TODO(sqs): addn doesnt copy, so the val must be around until the request occurs -- this should be ok, but check on it */
     apr_table_addn(c->notes, "TCP_CRYPT_ENABLE", tc_enable ? "1" : "0");
     if (tc_enable) {
         apr_table_addn(c->notes, "TCP_CRYPT_SESSID", tc_sessid);

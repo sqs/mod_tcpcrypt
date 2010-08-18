@@ -11,6 +11,12 @@
 #include "tcpcrypt/tcpcrypt.h"
 #include "tcpcrypt/tcpcrypt_ctl.h"
 
+/* TODO/WORKAROUND: If apache has a Listen directive that doesn't specify an
+   IPv4 address, then it will listen for tcp6 instead of just tcp. This causes
+   tcpcrypt to break on those connections. To fix this, specify an IPv4 address
+   in every Listen directive; for example, "Listen 0.0.0.0:80" instead of
+   "Listen 80". */
+
 /* TODO(sqs): find a cleaner way of getting access to socketdes */
 struct fake_apr_socket_t {
     apr_pool_t *pool;

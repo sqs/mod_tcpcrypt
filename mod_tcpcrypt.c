@@ -72,8 +72,9 @@ static int get_tcpcrypt_sockopts(conn_rec *c, void *csd) {
         if (tcpcrypt_getsockopt(sock->socketdes, IPPROTO_TCP, TCP_CRYPT_SESSID,
                                 buf, &len) == -1) {
             ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c,
-                          "tcpcrypt_getsockopt error for TCP_CRYPT_SESSID: %s (%d)",
-                          strerror(errno), errno);
+                          "tcpcrypt_getsockopt error for TCP_CRYPT_SESSID: "
+                          "%s (%d) [fd = %d, TCP_CRYPT_ENABLE = %d]",
+                          strerror(errno), errno, sock->socketdes, tc_enable);
             return DECLINED;
         }
 

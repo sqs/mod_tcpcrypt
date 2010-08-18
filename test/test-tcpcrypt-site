@@ -1,9 +1,7 @@
-Listen 7777
-
-<VirtualHost *:7777>
+<VirtualHost *:80>
              ServerName 127.0.0.1
-             DocumentRoot /home/sqs/src/mod_tcpcrypt/test
-             <Directory /home/sqs/src/mod_tcpcrypt/test/>
+             DocumentRoot /tmp/mod_tcpcrypt/
+             <Directory /tmp/mod_tcpcrypt/>
                         Options +ExecCGI
                         AddHandler cgi-script .sh
              </Directory>

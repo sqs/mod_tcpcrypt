@@ -11,11 +11,13 @@
 #include "tcpcrypt/tcpcrypt.h"
 #include "tcpcrypt/tcpcrypt_ctl.h"
 
-/* TODO/WORKAROUND: If apache has a Listen directive that doesn't specify an
-   IPv4 address, then it will listen for tcp6 instead of just tcp. This causes
-   tcpcrypt to break on those connections. To fix this, specify an IPv4 address
-   in every Listen directive; for example, "Listen 0.0.0.0:80" instead of
-   "Listen 80". */
+/* WARNING: Tcpcrypt doesn't really work with IPv6 (yet). If Apache is
+   listening on an IPv6 address (check `netstat` for "tcp6"), mod_tcpcrypt will
+   probably work for IPv4 clients (who will appear to Apache as having
+   IPv4-compatible IPv6 addresses). If you're having problems and don't
+   actually care about IPv6, then change all of your Apache config Listen
+   directives to specify an IPv4 address (e.g., `Listen 80 -> `Listen
+   0.0.0.0:80`). */
 
 /* TODO(sqs): find a cleaner way of getting access to socketdes */
 struct fake_apr_socket_t {
@@ -42,7 +44,6 @@ module AP_MODULE_DECLARE_DATA tcpcrypt_module = {
 static int get_tcpcrypt_sockopts(conn_rec *c, void *csd) {
     unsigned char buf[1024];
     unsigned char *b = (unsigned char *)buf;
-    int tc_enable;
     char *tc_sessid, *s;
     unsigned int len;
     struct fake_apr_socket_t *sock;
@@ -50,52 +51,31 @@ static int get_tcpcrypt_sockopts(conn_rec *c, void *csd) {
     sock = (struct fake_apr_socket_t *)csd;
     
     len = sizeof(buf);
-    if (tcpcrypt_getsockopt(sock->socketdes, IPPROTO_TCP, TCP_CRYPT_ENABLE,
-                   buf, &len) == -1) {
-        /* couldn't getsockopt, so unless it returned a weird error, then
-           tcpcrypt is not enabled */
-        if (errno == ENOENT) {
-            tc_enable = 0;
-        } else {
-            ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c,
-                          "getsockopt error for TCP_CRYPT_ENABLE: %s (%d)",
-                          strerror(errno), errno);
-            return DECLINED;
-        }
-    } else {
-        /* got sock opt */
-        tc_enable = !!buf[0];
+
+    if (tcpcrypt_getsockopt(sock->socketdes, IPPROTO_TCP, TCP_CRYPT_SESSID,
+                            buf, &len) == -1) {
+        ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c,
+                      "tcpcrypt_getsockopt error for TCP_CRYPT_SESSID: "
+                      "%s (%d) [fd=%d]",
+                      strerror(errno), errno, sock->socketdes);
+        return DECLINED;
     }
 
-    if (tc_enable) {
-        len = sizeof(buf);
-        if (tcpcrypt_getsockopt(sock->socketdes, IPPROTO_TCP, TCP_CRYPT_SESSID,
-                                buf, &len) == -1) {
-            ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c,
-                          "tcpcrypt_getsockopt error for TCP_CRYPT_SESSID: "
-                          "%s (%d) [fd = %d, TCP_CRYPT_ENABLE = %d]",
-                          strerror(errno), errno, sock->socketdes, tc_enable);
-            return DECLINED;
-        }
-
+    if (len) {
         tc_sessid = apr_palloc(c->pool, len*2 + 1);
+        tc_sessid[0] = '\0';
         assert(tc_sessid);
         s = tc_sessid;
         while (len--) {
             sprintf(s, "%.2X", *b++);
             s += 2;
         }
-    }
 
-    ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c, 
-                  "mod_tcpcrypt: set_tcpcrypt_env " \
-                  "socket={des=%d, type=%d, protocol=%d} " \
-                  "TCP_CRYPT_ENABLE=%d, TCP_CRYPT_SESSID=%s",
-                  sock->socketdes, sock->type, sock->protocol,
-                  tc_enable, tc_enable ? tc_sessid : "<none>");
-    
-    apr_table_addn(c->notes, "TCP_CRYPT_ENABLE", tc_enable ? "1" : "0");
-    if (tc_enable) {
+        ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c, 
+                      "mod_tcpcrypt: got TCP_CRYPT_SESSID=%s "
+                      "[fd=%d, type=%d, protocol=%d] ",
+                      tc_sessid[0] ? tc_sessid : "<none>",
+                      sock->socketdes, sock->type, sock->protocol);
         apr_table_addn(c->notes, "TCP_CRYPT_SESSID", tc_sessid);
     }
 
@@ -104,11 +84,9 @@ static int get_tcpcrypt_sockopts(conn_rec *c, void *csd) {
 
 static int set_tcpcrypt_env(request_rec *r)
 {
-    char *tc_sessid = apr_table_get(r->connection->notes, "TCP_CRYPT_SESSID");
+    const char *tc_sessid = apr_table_get(r->connection->notes, "TCP_CRYPT_SESSID");
 
-    apr_table_setn(r->subprocess_env, "TCP_CRYPT_ENABLE", 
-                   apr_table_get(r->connection->notes, "TCP_CRYPT_ENABLE"));
-    if (tc_sessid) {
+    if (tc_sessid && tc_sessid[0]) {
         apr_table_set(r->subprocess_env, "TCP_CRYPT_SESSID", tc_sessid);
     }
     

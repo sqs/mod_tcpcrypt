@@ -1,7 +1,7 @@
 mod_tcpcrypt for Apache
 =======================
 
-This module exposes the [tcpcrypt]:(http://tcpcrypt.org) session ID of the
+This module exposes the [tcpcrypt](http://tcpcrypt.org) session ID of the
 current Apache HTTP connection to scripts and Web apps running on Apache.
 
 The `TCP_CRYPT_SESSID` environment variable contains the tcpcrypt session ID

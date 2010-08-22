@@ -35,3 +35,10 @@ restart:
 stop:
 	$(APACHECTL) stop
 
+iptables-on:
+	iptables -I INPUT  -p tcp -m tcp --dport 80 -j NFQUEUE --queue-num 666
+	iptables -I OUTPUT -p tcp -m tcp --sport 80 -j NFQUEUE --queue-num 666
+
+iptables-off:
+	iptables -D INPUT  -p tcp -m tcp --dport 80 -j NFQUEUE --queue-num 666
+	iptables -D OUTPUT -p tcp -m tcp --sport 80 -j NFQUEUE --queue-num 666

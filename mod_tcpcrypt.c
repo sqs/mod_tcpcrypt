@@ -7,9 +7,8 @@
 #include "http_request.h" // fixups hook
 #include "http_log.h"
 #include "ap_config.h"
-#include "lib/tcpcrypt.h"
-#include "tcpcrypt/tcpcrypt.h"
-#include "tcpcrypt/tcpcrypt_ctl.h"
+#include <tcpcrypt/tcpcrypt.h>
+
 
 /* WARNING: Tcpcrypt doesn't really work with IPv6 (yet). If Apache is
    listening on an IPv6 address (check `netstat` for "tcp6"), mod_tcpcrypt will

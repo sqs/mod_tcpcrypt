@@ -1,7 +1,7 @@
 <VirtualHost *:80>
-             ServerName 127.0.0.1
-             DocumentRoot /tmp/mod_tcpcrypt/
-             <Directory /tmp/mod_tcpcrypt/>
+             ServerName test-tcpcrypt.mutualauth.org
+             DocumentRoot /var/www/test-tcpcrypt.mutualauth.org
+             <Directory /var/www/test-tcpcrypt.mutualauth.org>
                         Options +ExecCGI
                         AddHandler cgi-script .sh
              </Directory>

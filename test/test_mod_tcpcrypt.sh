@@ -9,10 +9,9 @@ case $testname in
         echo -n Testing mod_tcpcrypt with server tcpcryptd running...
         curl --tcp-nodelay --limit-rate 30 $url > $curlout 2>/dev/null &
         sleep 0.5
-        sessid=$(../tcpcrypt/user/test/tcpcrypt -v -N | tail -n 1 | rev | cut -d ' ' -f 1 | rev)
+        sessid=$(tcnetstat | tail -n 1 | rev | cut -d ' ' -f 1 | rev)
         wait
-        grep 'TCP_CRYPT_ENABLE = 1' $curlout && \
-            grep "${sessid/[^\w\d]/}" $curlout && \
+        grep "${sessid/[^\w\d]/}" $curlout && \
             echo "PASS" && exit 0
         echo "FAIL"
         echo Got
@@ -22,8 +21,7 @@ case $testname in
     off)
         echo -n Testing mod_tcpcrypt with server tcpcryptd off...
         curl $url > $curlout 2>/dev/null
-        grep 'TCP_CRYPT_ENABLE = 0' $curlout && \
-            grep "TCP_CRYPT_SESSID = <none>" $curlout && \
+        grep "TCP_CRYPT_SESSID = <none>" $curlout && \
             echo "PASS" && exit 0
         echo "FAIL"
         echo got
